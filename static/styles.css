@@ -1,0 +1,53 @@
+.flex-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.flex-column {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Hamburger menu styles */
+.hamburger-menu {
+    width: 30px;
+    height: 30px;
+    background-color: black;
+    border-radius: 5px;
+}
+
+/* Image styles */
+.image {
+    width: 300px;
+    height: 300px;
+    background-size: cover;
+}
+
+/* Table styles */
+table {
+    border-collapse: collapse;
+    border: 1px solid black;
+}
+
+th,
+td {
+    border: 1px solid black;
+    padding: 5px;
+}
+
+th {
+    background-color: #ccc;
+}
+
+/* Button menu styles */
+.button-menu {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+}
+
+.button-menu button {
+    padding: 10px;
+    margin: 5px;
+}

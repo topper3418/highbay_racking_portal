@@ -1,0 +1,7 @@
+INITIAL SPRINT
+- build main screen
+- serve main screen to client
+- hyperlink a few bits of it to navigate to next screens
+- build next screen
+
+- database is AFTER initial sprint
