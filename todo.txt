@@ -1,6 +1,6 @@
 INITIAL SPRINT
-- build main screen
-- serve main screen to client
+- build main screen DONE
+- serve main screen to client DONE
 - hyperlink a few bits of it to navigate to next screens
 - build next screen
 

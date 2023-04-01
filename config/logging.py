@@ -1,15 +1,17 @@
 import logging
 import logging.handlers
+import os
 import configparser
-import datetime
 
 # Load configuration from file
+config_path = os.path.join('config', 'app.conf')
 config = configparser.ConfigParser()
-config.read('config/app.conf')
+config.read(config_path)
 
-# Set up logging
 log_level = config.get('Logging', 'log_level')
-log_path = config.get('Logging', 'log_path')
+log_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'logs')
+os.makedirs(log_dir, exist_ok=True)
+log_path = os.path.join(log_dir, 'app.log')
 handler = logging.handlers.TimedRotatingFileHandler(
     log_path,
     when='midnight',
@@ -17,7 +19,12 @@ handler = logging.handlers.TimedRotatingFileHandler(
 )
 handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s: %(message)s'))
 handler.setLevel(log_level)
-logging.root.addHandler(handler)
-
-# Example usage
-logging.info('Hello, world!')
+# then the console handler
+console_handler = logging.StreamHandler()
+console_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s: %(message)s'))
+console_handler.setLevel(log_level)
+# get the logger and add the handlers and set the level
+logger = logging.getLogger('werkzeug')
+logger.addHandler(console_handler)
+logger.addHandler(handler)
+logger.setLevel(log_level)
