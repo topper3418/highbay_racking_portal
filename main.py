@@ -41,7 +41,8 @@ host_port = config.get('Server', 'port')
 # Example usage
 @app.route('/')
 def hello():
-    app_logger.info('Hello, world!')
+    # log the ip address of the request
+    app_logger.info(f'serving request from {request.remote_addr}')
     return render_template('index.html')
 
 if __name__ == '__main__':
