@@ -1,8 +1,0 @@
-CREATE TABLE IF NOT EXISTS requests (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    type TEXT NOT NULL,
-    submitter TEXT NOT NULL,
-    submitted TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    due_date DATE NOT NULL,
-    due_date_reason TEXT NOT NULL
-);

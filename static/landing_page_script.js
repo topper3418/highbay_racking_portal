@@ -1,6 +1,6 @@
 async function populateTable() {
     const table = document.querySelector('#requests-table');
-    const tableData = await fetch('/table_data?table_name=requests').then(response => response.json());
+    const tableData = await fetch('/get_requests?table_name=requests').then(response => response.json());
     
     // Clear existing table rows
     while (table.rows.length > 1) {
