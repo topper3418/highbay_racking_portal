@@ -1,7 +1,7 @@
 import configparser
 import os
 from config.logging import logger
-from data.sqlite_tools import AppData, Tickets, DbTableBase, Roles
+from data.sqlite_tools import AppData, Tickets, DbTableBase, Roles, Users, TicketTypes, TicketStatus, EquipmentStatus, DueDateReason
 from flask import Flask, render_template, request, jsonify, send_from_directory, redirect, url_for
 
 # Load configuration from file
@@ -63,6 +63,13 @@ def get_table():
         df = DbTableBase(app_data_path, query).fetch_100()
     return jsonify(df.to_dict(orient='records'))
 
+@app.route('/admin_tools_popup', methods=['GET'])
+def admin_tools_popup():
+    """Return the admin tools popup html"""
+    # log the ip address of the request
+    logger.info(f'serving /admin_tools_popup request from {request.remote_addr}')
+    return render_template('admin_tools_popup.html')
+
 @app.route('/new_role_popup', methods=['GET'])
 def new_role_popup():
     """Return the new role popup html"""
@@ -91,8 +98,8 @@ def get_roles():
     # log the ip address of the request
     logger.info(f'serving /get_roles request from {request.remote_addr}')
     # get and return the data
-    roles_list = Roles(app_data_path).get_rolenames()
-    return jsonify(roles_list)
+    roles_df = Roles(app_data_path).dropdown()
+    return jsonify(roles_df.to_dict(orient='records'))
 
 @app.route('/new_user_popup', methods=['GET'])
 def new_user_popup():
@@ -100,6 +107,100 @@ def new_user_popup():
     # log the ip address of the request
     logger.info(f'serving /new_user_popup request from {request.remote_addr}')
     return render_template('create_user_popup.html')
+
+@app.route('/create_user', methods=['POST'])
+def create_user():
+    """Create a new user in the database"""
+    # log the ip address of the request
+    logger.info(f'serving /create_user request from {request.remote_addr}')
+    # parse request data
+    new_user = request.form['username']
+    new_password = request.form['password']
+    new_role = request.form['role']
+    # initialize the Roles object
+    users = Users(app_data_path)
+    users.insert(new_user, new_password, new_role)
+    return redirect(url_for('serve_main'))
+
+@app.route('/new_ticket_type_popup', methods=['GET'])
+def new_ticket_type_popup():
+    """Return the new ticket type popup html"""
+    # log the ip address of the request
+    logger.info(f'serving /new_ticket_type_popup request from {request.remote_addr}')
+    return render_template('create_ticket_type_popup.html')
+
+@app.route('/create_ticket_type', methods=['POST'])
+def create_ticket_type():
+    """Create a new ticket type in the database"""
+    # log the ip address of the request
+    logger.info(f'serving /create_ticket_type request from {request.remote_addr}')
+    # parse request data
+    new_ticket_type = request.form['ticket-type']
+    new_description = request.form['type-description']
+    # initialize the Roles object
+    ticket_types = TicketTypes(app_data_path)
+    ticket_types.insert(new_ticket_type, new_description)
+    return redirect(url_for('serve_main'))
+
+@app.route('/new_ticket_status_popup', methods=['GET'])
+def new_ticket_status_popup():
+    """Return the new ticket status popup html"""
+    # log the ip address of the request
+    logger.info(f'serving /new_ticket_status_popup request from {request.remote_addr}')
+    return render_template('insert_to_lookup_table_popup.html', name='Ticket Status', table_name='ticket_status')
+
+@app.route('/create_ticket_status', methods=['POST'])
+def create_ticket_status():
+    """Create a new ticket status in the database"""
+    # log the ip address of the request
+    logger.info(f'serving /create_ticket_status request from {request.remote_addr}')
+    # parse request data
+    new_ticket_status = request.form['ticket_status_name']
+    new_description = request.form['ticket_status_description']
+    # initialize the Roles object
+    ticket_status = TicketStatus(app_data_path)
+    ticket_status.insert(new_ticket_status, new_description)
+    return redirect(url_for('serve_main'))
+
+@app.route('/new_equipment_status_popup', methods=['GET'])
+def new_equipment_status_popup():
+    """Return the new equipment status popup html"""
+    # log the ip address of the request
+    logger.info(f'serving /new_equipment_status_popup request from {request.remote_addr}')
+    return render_template('insert_to_lookup_table_popup.html', name='Equipment Status', table_name='equipment_status')
+
+@app.route('/create_equipment_status', methods=['POST'])
+def create_equipment_status():
+    """Create a new equipment status in the database"""
+    # log the ip address of the request
+    logger.info(f'serving /create_equipment_status request from {request.remote_addr}')
+    # parse request data
+    new_equipment_status = request.form['equipment_status_name']
+    new_description = request.form['equipment_status_description']
+    # initialize the Roles object
+    equipment_status = EquipmentStatus(app_data_path)
+    equipment_status.insert(new_equipment_status, new_description)
+    return redirect(url_for('serve_main'))
+
+@app.route('/new_due_date_reason_popup', methods=['GET'])
+def new_due_date_reason_popup():
+    """Return the new due date reason popup html"""
+    # log the ip address of the request
+    logger.info(f'serving /new_due_date_reason_popup request from {request.remote_addr}')
+    return render_template('insert_to_lookup_table_popup.html', name='Due Date Reason', table_name='due_date_reasons')
+
+@app.route('/create_due_date_reasons', methods=['POST'])
+def create_due_date_reason():
+    """Create a new due date reason in the database"""
+    # log the ip address of the request
+    logger.info(f'serving /create_due_date_reason request from {request.remote_addr}')
+    # parse request data
+    new_due_date_reason = request.form['due_date_reasons_name']
+    new_description = request.form['due_date_reasons_description']
+    # initialize the Roles object
+    due_date_reason = DueDateReason(app_data_path)
+    due_date_reason.insert(new_due_date_reason, new_description)
+    return redirect(url_for('serve_main'))
 
 # test endpoint for sending misc html
 @app.route('/test', methods=['GET'])

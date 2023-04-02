@@ -26,13 +26,13 @@
           </table>
         </div>
         <div class="button-container">
-          <button onclick="fetchPopup(event)" data-link="{{url_for('new_role_popup')}}">Create New Role</button>
-          <button onclick="fetchPopup(event, [populateDropdownsFromApi])" data-link="{{url_for('new_user_popup')}}">Create New User</button>
+          <button><a href="#">Button 1</a></button>
+          <button><a href="#">Button 2</a></button>
           <button><a href="#">Button 3</a></button>
           <button><a href="#">Button 4</a></button>
           <button><a href="#">Button 5</a></button>
           <button><a href="#">Button 6</a></button>
-          <button><a href="{{url_for('get_roles')}}">test_endpoint: get_roles</a></button>
+          <button onclick="fetchPopup(event)" data-link="{{url_for('admin_tools_popup')}}">Open Admin Tools</button>
         </div>
       </div>
     </div>

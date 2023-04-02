@@ -199,5 +199,84 @@ class Roles(DbTableBase):
         }
         super().default_insert(params)
     
-    def get_rolenames(self) -> list:
-        return self.get_data(f"SELECT role FROM {self.table_name}").values.tolist()
+    def dropdown(self) -> pandas.DataFrame:
+        return self.get_data(f"SELECT id, role as text FROM {self.table_name}")
+    
+class Users(DbTableBase):
+    """represents the users table in the database
+    """
+    def __init__(self, db_path):
+        super().__init__(db_path, 'users')
+    
+    def insert(self, new_username: str, new_password: str, new_role: int) -> None:
+        params = {
+            'username': new_username,
+            'password': new_password,
+            'role': new_role
+        }
+        super().default_insert(params)
+        
+class TicketTypes(DbTableBase):
+    """represents the ticket_types table in the database
+    """
+    def __init__(self, db_path):
+        super().__init__(db_path, 'ticket_types')
+    
+    def insert(self, new_type: str, new_description) -> None:
+        params = {
+            'type': new_type,
+            'description': new_description
+        }
+        super().default_insert(params)
+        
+    def dropdown(self) -> pandas.DataFrame:
+        return self.get_data(f"SELECT id, type as text FROM {self.table_name}")
+    
+class TicketStatus(DbTableBase):
+    """represents the ticket_status table in the database
+    """
+    def __init__(self, db_path):
+        super().__init__(db_path, 'ticket_status')
+    
+    def insert(self, new_status: str, new_description) -> None:
+        params = {
+            'status': new_status,
+            'description': new_description
+        }
+        super().default_insert(params)
+        
+    def dropdown(self) -> pandas.DataFrame:
+        return self.get_data(f"SELECT id, status as text FROM {self.table_name}")
+    
+class EquipmentStatus(DbTableBase):
+    """represents the equipment_status table in the database
+    """
+    def __init__(self, db_path):
+        super().__init__(db_path, 'equipment_status')
+    
+    def insert(self, new_status: str, new_description) -> None:
+        params = {
+            'status': new_status,
+            'description': new_description
+        }
+        super().default_insert(params)
+        
+    def dropdown(self) -> pandas.DataFrame:
+        return self.get_data(f"SELECT id, status as text FROM {self.table_name}")
+    
+class DueDateReason(DbTableBase):
+    """represents the due_date_reason table in the database
+    """
+    def __init__(self, db_path):
+        super().__init__(db_path, 'due_date_reasons')
+        
+    def insert(self, new_reason: str, new_description) -> None:
+        params = {
+            'reason': new_reason,
+            'description': new_description
+        }
+        super().default_insert(params)
+        
+    def dropdown(self) -> pandas.DataFrame:
+        return self.get_data(f"SELECT id, reason as text FROM {self.table_name}")
+    

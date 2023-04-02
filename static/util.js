@@ -58,8 +58,9 @@ async function populateDropdownsFromApi(container) {
                 const jsonData = await response.json();
                 jsonData.forEach(value => {
                     const option = document.createElement('option');
-                    option.value = value;
-                    option.text = value;
+                    // the headers are 'id and 'text' so we can use them to set the value and text
+                    option.value = value.id;
+                    option.textContent = value.text;
                     dropdown.appendChild(option);
                 });
             } else {
