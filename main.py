@@ -1,8 +1,7 @@
 import configparser
-import datetime
 import os
 from config.logging import logger
-from data.sqlite_tools import Database, AppData, Tickets
+from data.sqlite_tools import AppData, Tickets
 from flask import Flask, render_template, request, jsonify
 
 # Load configuration from file

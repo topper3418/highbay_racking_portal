@@ -207,11 +207,12 @@ class Tickets(DbTableBase):
         sql = f"""SELECT 
                     id,
                     submitter,
-                    strftime(submitted, '%Y-%m-%d %H:%M:%S') as submitted,
-                    strftime(due_date, '%Y-%m-%d') as due_date,
+                    strftime('%Y-%m-%d %H:%M:%S', submitted, 'unixepoch') as submitted,
+                    strftime('%Y-%m-%d', due_date, 'unixepoch') as due_date,
                     due_date_reason
                   FROM tickets 
                   WHERE submitted < {endtime.timestamp()}
+                  ORDER BY submitted DESC
                   LIMIT 100"""
         return super().fetch_100(endtime, sql)
     
