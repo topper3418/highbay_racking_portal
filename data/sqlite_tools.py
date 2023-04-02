@@ -94,8 +94,8 @@ class AppData(SqlConnectionBase):
             'equipment_status',
             'due_date_reasons',
             'vendors', 
-            'vendor_contacts',
             'departments',
+            'vendor_contacts',
             'internal_contacts',
             'tickets',
             'ticket_comments',
@@ -280,3 +280,38 @@ class DueDateReason(DbTableBase):
     def dropdown(self) -> pandas.DataFrame:
         return self.get_data(f"SELECT id, reason as text FROM {self.table_name}")
     
+class Vendors(DbTableBase):
+    """represents the vendors table in the database
+    """
+    def __init__(self, db_path):
+        super().__init__(db_path, 'vendors')
+        
+    def insert(self, new_vendor_name, new_vendor_address, new_vendor_phone, new_vendor_email):
+        """inserts a new vendor into the vendors table"""
+        params = {
+            'name': new_vendor_name,
+            'address': new_vendor_address,
+            'phone': new_vendor_phone,
+            'email': new_vendor_email
+        }
+        super().default_insert(params)
+        
+    def dropdown(self) -> pandas.DataFrame:
+        return self.get_data(f"SELECT id, vendor as text FROM {self.table_name}")
+
+class Departments(DbTableBase):
+    """represents the departments table in the database
+    """
+    def __init__(self, db_path):
+        super().__init__(db_path, 'departments')
+        
+    def insert(self, new_department_name, new_department_description):
+        """inserts a new department into the departments table"""
+        params = {
+            'name': new_department_name,
+            'description': new_department_description
+        }
+        super().default_insert(params)
+        
+    def dropdown(self) -> pandas.DataFrame:
+        return self.get_data(f"SELECT id, department as text FROM {self.table_name}")

@@ -13,6 +13,9 @@
         <button onclick="fetchPopup(event)" data-link="{{url_for('new_ticket_status_popup')}}">Create New Ticket Status</button>
         <button onclick="fetchPopup(event)" data-link="{{url_for('new_equipment_status_popup')}}">Create New Equipment Status</button>
         <button onclick="fetchPopup(event)" data-link="{{url_for('new_due_date_reason_popup')}}">Create New Due Date Reason</button>
+        <button onclick="fetchPopup(event)" data-link="{{url_for('create_new_vendor_popup')}}">Create New Vendor</button>
+        <button onclick="fetchPopup(event)" data-link="{{url_for('create_new_department_popup')}}">Create New Department</button>
+        <button onclick="fetchPopup(event, [populateDropdownsFromApi])" data-link="{{url_for('create_new_contact_popup')}}">Create New Contact</button>
         <button><a href="{{url_for('get_roles')}}">test_endpoint: get_roles</a></button>
       </div>
 </body> 

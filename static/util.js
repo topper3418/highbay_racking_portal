@@ -106,3 +106,22 @@ function fetchPopup(event, callbacks) {
             }
         });
 }
+
+function showHideDropdowns(event) {
+    const selectedValue = event.target.value;
+    const dropdownToShow = document.getElementById(selectedValue);
+    
+    let dropdownValues = [];
+    const options = event.target.options;
+
+    for (let i = 0; i < options.length; i++) {
+        dropdownValues.push(options[i].value);
+    }
+
+    dropdownValues.forEach(value => {
+        const dropdown = document.getElementById(value);
+        dropdown.style.display = 'none';
+    });
+
+    dropdownToShow.style.display = 'block';
+}

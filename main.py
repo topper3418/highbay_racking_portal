@@ -1,7 +1,7 @@
 import configparser
 import os
 from config.logging import logger
-from data.sqlite_tools import AppData, Tickets, DbTableBase, Roles, Users, TicketTypes, TicketStatus, EquipmentStatus, DueDateReason
+from data.sqlite_tools import AppData, Tickets, DbTableBase, Roles, Users, TicketTypes, TicketStatus, EquipmentStatus, DueDateReason, Vendors, Departments
 from flask import Flask, render_template, request, jsonify, send_from_directory, redirect, url_for
 
 # Load configuration from file
@@ -201,6 +201,80 @@ def create_due_date_reason():
     due_date_reason = DueDateReason(app_data_path)
     due_date_reason.insert(new_due_date_reason, new_description)
     return redirect(url_for('serve_main'))
+
+@app.route('/create_new_vendor_popup', methods=['GET'])
+def create_new_vendor_popup():
+    """Return the new vendor popup html"""
+    # log the ip address of the request
+    logger.info(f'serving /create_new_vendor_popup request from {request.remote_addr}')
+    return render_template('create_new_vendor_popup.html')
+
+@app.route('/create_new_vendor', methods=['POST'])
+def create_new_vendor():
+    """Create a new vendor in the database"""
+    # log the ip address of the request
+    logger.info(f'serving /create_new_vendor request from {request.remote_addr}')
+    # parse request data
+    new_vendor_name = request.form['name']
+    new_vendor_address = request.form['address']
+    new_vendor_phone = request.form['phone']
+    new_vendor_email = request.form['email']
+    # initialize the Roles object
+    vendors = Vendors(app_data_path)
+    vendors.insert(new_vendor_name, new_vendor_address, new_vendor_phone, new_vendor_email)
+    return redirect(url_for('serve_main'))
+
+@app.route('/create_new_deppartment_popup', methods=['GET'])
+def create_new_department_popup():
+    """Return the new department popup html"""
+    # log the ip address of the request
+    logger.info(f'serving /create_new_department_popup request from {request.remote_addr}')
+    return render_template('insert_to_lookup_table_popup.html', name='Department', table_name='departments')
+
+@app.route('/create_departments', methods=['POST'])
+def create_new_department():
+    """Create a new department in the database"""
+    # log the ip address of the request
+    logger.info(f'serving /create_new_department request from {request.remote_addr}')
+    # parse request data
+    new_department_name = request.form['departments_name']
+    new_department_description = request.form['departments_description']
+    # initialize the Roles object
+    departments = Departments(app_data_path)
+    departments.insert(new_department_name, new_department_description)
+    return redirect(url_for('serve_main'))
+
+@app.route('/get_all_vendors', methods=['GET'])
+def get_all_vendors():
+    """Return all vendors in the database"""
+    # log the ip address of the request
+    logger.info(f'serving /get_all_vendors request from {request.remote_addr}')
+    # initialize the Vendors object
+    vendors = Vendors(app_data_path)
+    # get all vendors
+    all_vendors = vendors.dropdown()
+    return jsonify(all_vendors.to_dict(orient='records'))
+
+@app.route('/get_all_departments', methods=['GET'])
+def get_all_departments():
+    """Return all departments in the database"""
+    # log the ip address of the request
+    logger.info(f'serving /get_all_departments request from {request.remote_addr}')
+    # initialize the Departments object
+    departments = Departments(app_data_path)
+    # get all departments
+    all_departments = departments.dropdown()
+    return jsonify(all_departments.to_dict(orient='records'))
+
+@app.route('/create_new_contact_popup', methods=['GET'])
+def create_new_contact_popup():
+    """Return the new contact popup html"""
+    # log the ip address of the request
+    logger.info(f'serving /create_new_contact_popup request from {request.remote_addr}')
+    return render_template('create_new_contact_popup.html')
+
+@app.route('/create_new_contact', methods=['POST'])
+
 
 # test endpoint for sending misc html
 @app.route('/test', methods=['GET'])
