@@ -46,8 +46,33 @@ function populateTable(tableId, data) {
     }
 }
 
-// function to add as an event listener to the popup buttons
-function fetchPopup(event) {
+async function populateDropdownsFromApi(container) {
+    // get all the dropdowns that have a data-link attribute
+    const dropdowns = container.querySelectorAll('select[data-link]');
+    // wrap main functionality in a loop
+    for (const dropdown of dropdowns) {
+        try {
+            const api_url = dropdown.dataset.link;
+            const response = await fetch(api_url)
+            if (response.ok) {
+                const jsonData = await response.json();
+                jsonData.forEach(value => {
+                    const option = document.createElement('option');
+                    option.value = value;
+                    option.text = value;
+                    dropdown.appendChild(option);
+                });
+            } else {
+                console.error("Error fetching data from API:", response.statusText);
+            }
+        } catch (error) {
+            console.error("Error fetching data from API:", error);
+        }
+    }
+}
+
+// function to fetch a popup run functions on it after
+function fetchPopup(event, callbacks) {
     // get the link from the button's data-link attribute
     const button = event.target;
     const link = button.dataset.link;
@@ -67,12 +92,16 @@ function fetchPopup(event) {
             // add the wrapper to the body
             document.body.appendChild(wrapper);
             // add an event listener to the wrapper to remove it from the DOM when clicked
-            wrapper.addEventListener('click', function(event) {
+            wrapper.addEventListener('click', function (event) {
                 // check if the click target is the wrapper element
                 if (event.target === wrapper) {
-                  // remove the wrapper element from the DOM
-                  wrapper.remove();
+                    // remove the wrapper element from the DOM
+                    wrapper.remove();
                 }
-              });
+            });
+            // run the callbacks
+            if (callbacks && callbacks.length > 0) {
+                callbacks.forEach(callback => callback(container));
+            }
         });
 }

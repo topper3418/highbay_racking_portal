@@ -26,23 +26,17 @@
           </table>
         </div>
         <div class="button-container">
-          <button id='create-new-role' data-link="{{url_for('static', filename='create_role_popup.html')}}">Create New Role</button>
-          <button><a href="#">Button 2</a></button>
+          <button onclick="fetchPopup(event)" data-link="{{url_for('new_role_popup')}}">Create New Role</button>
+          <button onclick="fetchPopup(event, [populateDropdownsFromApi])" data-link="{{url_for('new_user_popup')}}">Create New User</button>
           <button><a href="#">Button 3</a></button>
           <button><a href="#">Button 4</a></button>
           <button><a href="#">Button 5</a></button>
           <button><a href="#">Button 6</a></button>
-          <button><a href="#">Button 7</a></button>
+          <button><a href="{{url_for('get_roles')}}">test_endpoint: get_roles</a></button>
         </div>
       </div>
     </div>
     <script src="{{ url_for('static', filename='landing_page_script.js') }}"></script>
     <script src="{{ url_for('static', filename='util.js') }}"></script>
-    <script>
-      // Get a reference to Button 1 and the container element to render the content
-      const button1 = document.getElementById('create-new-role');
-      // When Button 1 is clicked, fetch some HTML content from the server and display it in a modal dialog
-      button1.addEventListener('click', fetchPopup);
-    </script>
   </body>
 </html>

@@ -7,11 +7,11 @@ CREATE TABLE IF NOT EXISTS tickets (
     due_date_reason_id INTEGER NOT NULL, -- Foreign key to due_date_reasons table
     status_id INTEGER NOT NULL, -- Foreign key to ticket_status table
     owner_id INTEGER NOT NULL, -- Foreign key to users table
-    relevant_equipment INTEGER NOT NULL, -- Foreign key to equipment table
+    equipment_id INTEGER, -- Foreign key to equipment table
     FOREIGN KEY (type_id) REFERENCES ticket_types(id),
     FOREIGN KEY (submitter_id) REFERENCES internal_contacts(id),
     FOREIGN KEY (due_date_reason_id) REFERENCES due_date_reasons(id),
     FOREIGN KEY (status_id) REFERENCES ticket_status(id),
     FOREIGN KEY (owner_id) REFERENCES users(id),
-    FOREIGN KEY (relevant_equipment) REFERENCES equipment(id)
+    FOREIGN KEY (equipment_id) REFERENCES equipment(id)
 );

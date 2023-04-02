@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Create New User</title>
+	<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
+	<script>
+		console.log('the script is running');
+	</script>
+</head>
+<body>
+	<h1>Create New User</h1>
+	<form method="post" action="/create_role">
+		<label for="username">Username:</label>
+		<input type="text" id="username" name="username"><br>
+
+		<label for="password">Password:</label>
+		<input type="text" id="password" name="password"><br>
+
+		<label for="role">Role:</label>
+		<select id="role" name="role" data-link="{{ url_for('get_roles') }}">
+			<-- options will be populated by the script -->
+		</select><br>
+		
+		<input type="submit" value="Create User">
+	</form>
+</body>
+</html>

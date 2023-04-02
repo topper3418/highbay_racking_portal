@@ -68,7 +68,7 @@ def new_role_popup():
     """Return the new role popup html"""
     # log the ip address of the request
     logger.info(f'serving /new_role_popup request from {request.remote_addr}')
-    return send_from_directory('static', 'create_role_popup.html')
+    return render_template('create_role_popup.html')
 
 @app.route('/create_role', methods=['POST'])
 def create_role():
@@ -85,6 +85,22 @@ def create_role():
     # redirect back to the main screen
     return redirect(url_for('serve_main'))
     
+@app.route('/get_roles', methods=['GET'])
+def get_roles():
+    """Return the roles table data as JSON"""
+    # log the ip address of the request
+    logger.info(f'serving /get_roles request from {request.remote_addr}')
+    # get and return the data
+    roles_list = Roles(app_data_path).get_rolenames()
+    return jsonify(roles_list)
+
+@app.route('/new_user_popup', methods=['GET'])
+def new_user_popup():
+    """Return the new user popup html"""
+    # log the ip address of the request
+    logger.info(f'serving /new_user_popup request from {request.remote_addr}')
+    return render_template('create_user_popup.html')
+
 # test endpoint for sending misc html
 @app.route('/test', methods=['GET'])
 def serve_test():

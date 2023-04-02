@@ -181,10 +181,10 @@ class Tickets(DbTableBase):
         self.view_name = 'all_tickets_view'
         
     def fetch_100(self, endtime: datetime = datetime.now()) -> pandas.DataFrame:
-        sql = f"""SELECT * FROM {self.table_name}
+        sql = f"""SELECT * FROM {self.view_name}
                   WHERE submitted < {endtime.timestamp()}
                   LIMIT 100"""
-        return super().fetch_100(endtime, sql)
+        return super().fetch_100(sql)
     
 class Roles(DbTableBase):
     """represents the roles table in the database
@@ -198,3 +198,6 @@ class Roles(DbTableBase):
             'description': new_description
         }
         super().default_insert(params)
+    
+    def get_rolenames(self) -> list:
+        return self.get_data(f"SELECT role FROM {self.table_name}").values.tolist()

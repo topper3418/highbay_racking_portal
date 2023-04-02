@@ -1,7 +1,7 @@
 import configparser
 import os
 from config.logging import logger
-from data.sqlite_tools import AppData, Tickets, DbTableBase
+from data.sqlite_tools import AppData, Tickets, DbTableBase, Roles
 from flask import Flask, render_template, request, jsonify
 
 # Load configuration from file
@@ -18,4 +18,4 @@ app_data = AppData(app_data_path)
 all_tables = app_data.get_tables()
 all_views = app_data.get_views()
 
-print(all_tables)
+print(Roles(app_data_path).get_rolenames())
