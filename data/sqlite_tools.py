@@ -117,12 +117,18 @@ class AppData(SqlConnectionBase):
             'tickets_history_update_status_id',
             'tickets_history_update_owner_id'
         ]
+        views = [
+            'all_tickets_view'
+        ]
         for table in tables:
             print(f'Creating table {table}...')
             self.run_sql_script(script_path(f'{table}.sql', 'table_ddls'))
         for trigger in triggers:
             print(f'Creating trigger {trigger}...')
             self.run_sql_script(script_path(f'{trigger}.sql', 'trigger_ddls'))
+        for view in views:
+            print(f'Creating view {view}...')
+            self.run_sql_script(script_path(f'{view}.sql', 'view_ddls'))
 
 class DbTableBase(SqlConnectionBase):
     """Base class for all database tables
@@ -135,7 +141,21 @@ class DbTableBase(SqlConnectionBase):
     def get_description(self) -> pandas.DataFrame:
         return super().get_description(self.table_name) 
     
-    def fetch_100(self, endtime: datetime = datetime.now(), sql=None) -> pandas.DataFrame:
+    def default_insert(self, params: dict) -> None:
+        """inserts a row into the table with the given params
+
+        Args:
+            params (dict): _description_
+        """
+        headers = params.keys()
+        sql = f"""INSERT INTO {self.table_name} 
+                    ({', '.join(headers)}) 
+                  VALUES 
+                    ({', '.join([f':{header}' for header in headers])})"""
+        print(f'Running SQL: {sql} with params: {params}')
+        self.run_cmd_params(sql, params)
+    
+    def fetch_100(self, sql=None) -> pandas.DataFrame:
         """returns the first 100 rows from the requests table where the endtime is less than the given endtime
 
         Args:
@@ -145,7 +165,7 @@ class DbTableBase(SqlConnectionBase):
             pandas.DataFrame: _description_
         """
         if sql is None:
-            sql = f"SELECT * FROM {self.table_name} WHERE submitted < '{endtime.timestamp()}' LIMIT 100"
+            sql = f"SELECT * FROM {self.table_name} LIMIT 100"
         
         return self.get_data(sql)
 
@@ -158,17 +178,23 @@ class Tickets(DbTableBase):
     # do so through this class
     def __init__(self, db_path):
         super().__init__(db_path, 'tickets')
+        self.view_name = 'all_tickets_view'
         
     def fetch_100(self, endtime: datetime = datetime.now()) -> pandas.DataFrame:
-        sql = f"""SELECT 
-                    id,
-                    submitter,
-                    strftime('%Y-%m-%d %H:%M:%S', submitted, 'unixepoch') as submitted,
-                    strftime('%Y-%m-%d', due_date, 'unixepoch') as due_date,
-                    due_date_reason
-                  FROM tickets 
+        sql = f"""SELECT * FROM {self.table_name}
                   WHERE submitted < {endtime.timestamp()}
-                  ORDER BY submitted DESC
                   LIMIT 100"""
         return super().fetch_100(endtime, sql)
     
+class Roles(DbTableBase):
+    """represents the roles table in the database
+    """
+    def __init__(self, db_path):
+        super().__init__(db_path, 'roles')
+        
+    def insert(self, new_role: str, new_description) -> None:
+        params = {
+            'role': new_role,
+            'description': new_description
+        }
+        super().default_insert(params)

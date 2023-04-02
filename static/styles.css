@@ -79,3 +79,53 @@ tr:nth-child(even) {
 tr:hover {
     background-color: #ddd;
 }
+
+.popup {
+    display: none;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    background: #fff;
+    width: 500px;
+    height: 500px;
+    margin-left: -250px;
+    /*Half the value of width to center div*/
+    margin-top: -250px;
+    /*Half the value of height to center div*/
+    z-index: 200;
+}
+
+.popup > * {
+    padding: 1.5%;
+}
+
+.popup-wrapper {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+  }
+  
+  .popup-content {
+    background-color: white;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    padding: 20px;
+    max-width: 90%;
+    max-height: 90%;
+    overflow: auto;
+  }
+  
+  .popup-close {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    cursor: pointer;
+    font-size: 20px;
+  }

@@ -5,6 +5,7 @@ async function populateTableFromApi(tableId, apiUrl, query) {
         if (response.ok) {
             const jsonData = await response.json();
             populateTable(tableId, jsonData);
+            return jsonData;
         } else {
             console.error("Error fetching data from API:", response.statusText);
         }
@@ -43,4 +44,35 @@ function populateTable(tableId, data) {
             tbody.appendChild(tr);
         });
     }
+}
+
+// function to add as an event listener to the popup buttons
+function fetchPopup(event) {
+    // get the link from the button's data-link attribute
+    const button = event.target;
+    const link = button.dataset.link;
+    // fetch the popup content from the link and get the html
+    fetch(link) // returns a promise
+        .then(response => response.text()) // returns a promise
+        .then(html => {
+            // create a div element to hold the html
+            const container = document.createElement("div");
+            container.classList.add("popup-content");
+            // add the html to the div
+            container.innerHTML = html;
+            // create a wrapper div to hold the content and black out most of the screen
+            const wrapper = document.createElement('div');
+            wrapper.classList.add('popup-wrapper');
+            wrapper.appendChild(container);
+            // add the wrapper to the body
+            document.body.appendChild(wrapper);
+            // add an event listener to the wrapper to remove it from the DOM when clicked
+            wrapper.addEventListener('click', function(event) {
+                // check if the click target is the wrapper element
+                if (event.target === wrapper) {
+                  // remove the wrapper element from the DOM
+                  wrapper.remove();
+                }
+              });
+        });
 }

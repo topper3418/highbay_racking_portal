@@ -26,7 +26,7 @@
           </table>
         </div>
         <div class="button-container">
-          <button><a href="https://www.hyster.com/en-us/north-america/" target="_blank">Button 1</a></button>
+          <button id='create-new-role' data-link="{{url_for('static', filename='create_role_popup.html')}}">Create New Role</button>
           <button><a href="#">Button 2</a></button>
           <button><a href="#">Button 3</a></button>
           <button><a href="#">Button 4</a></button>
@@ -37,5 +37,12 @@
       </div>
     </div>
     <script src="{{ url_for('static', filename='landing_page_script.js') }}"></script>
+    <script src="{{ url_for('static', filename='util.js') }}"></script>
+    <script>
+      // Get a reference to Button 1 and the container element to render the content
+      const button1 = document.getElementById('create-new-role');
+      // When Button 1 is clicked, fetch some HTML content from the server and display it in a modal dialog
+      button1.addEventListener('click', fetchPopup);
+    </script>
   </body>
 </html>
