@@ -1,53 +1,90 @@
-.flex-row {
+body{
+    height: 100vh;
+    overflow: hidden;
+}
+
+.root-container {
     display: flex;
     flex-direction: row;
     align-items: center;
 }
 
-.flex-column {
+.root-container>* {
+    padding: 1.5%;
+}
+
+.overhead-image-container {
+    box-sizing: border-box;
+    width: calc(100% * 2/3);
+    height: auto;
+    max-height: 100vh;
+}
+
+.actions-container {
+    width: calc(100% * 1/3);
     display: flex;
     flex-direction: column;
+    flex-shrink: 1;
+    align-self: flex-start;
 }
 
-/* Hamburger menu styles */
-.hamburger-menu {
-    width: 30px;
+.button-menu {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 1;
+}
+
+.button-menu>* {
+    margin: 2.5%;
+    width: 100%;
+}
+
+.actions-container>* {
+    padding: 2.5%;
+}
+
+.hamburger-menu-container {
+    align-self: flex-end;
+}
+
+#hamburger-menu {
     height: 30px;
-    background-color: black;
-    border-radius: 5px;
+    width: 30px;
+    color: transparent;
 }
 
-/* Image styles */
-.image {
-    width: 300px;
-    height: 300px;
-    background-size: cover;
+.table-container {
+    height: 200px;
+    /* set a fixed height */
+    overflow: auto;
+    /* make it scrollable */
 }
 
-/* Table styles */
 table {
     border-collapse: collapse;
-    border: 1px solid black;
+    width: 100%;
+    max-width: 100%;
 }
 
 th,
 td {
-    border: 1px solid black;
-    padding: 5px;
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+    font-size: 16px;
 }
 
 th {
-    background-color: #ccc;
+    background-color: #f2f2f2;
+    font-weight: bold;
 }
 
-/* Button menu styles */
-.button-menu {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
+tr:nth-child(even) {
+    background-color: #f2f2f2;
 }
 
-.button-menu button {
-    padding: 10px;
-    margin: 5px;
+tr:hover {
+    background-color: #ddd;
 }

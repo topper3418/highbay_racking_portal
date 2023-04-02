@@ -5,37 +5,29 @@
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
   </head>
   <body>
-    <div class="flex-row">
-      <div class="image">
+    <div class="root-container">
+      <div class="overhead-image-container">
         <img src="{{ url_for('static', filename='images/downstairs_image.png') }}" alt="overhead_image" style="width:100%", id="overhead_image">
       </div>
-      <div class="flex-column" style="flex: 1;">
-        <table>
-          <thead>
-            <tr>
-              <th>Column 1</th>
-              <th>Column 2</th>
-              <th>Column 3</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>Row 1, Column 1</td>
-              <td>Row 1, Column 2</td>
-              <td>Row 1, Column 3</td>
-            </tr>
-            <tr>
-              <td>Row 2, Column 1</td>
-              <td>Row 2, Column 2</td>
-              <td>Row 2, Column 3</td>
-            </tr>
-            <tr>
-              <td>Row 3, Column 1</td>
-              <td>Row 3, Column 2</td>
-              <td>Row 3, Column 3</td>
-            </tr>
-          </tbody>
-        </table>
+      <div class="actions-container">
+        <div class="hamburger-menu-container">
+            <button id="hamburger-menu" href="#">Hamburger Menu</button>
+        </div>
+        <div class="table-container">
+          <table id='requests-table'>
+            <thead>
+                <tr>
+                  <th>Type</th>
+                  <th>Submitter</th>
+                  <th>Submitted</th>
+                  <th>Due Date</th>
+                  <th>Due Date Reason</th>
+                </tr>
+              </thead>
+              <tbody>
+              </tbody>
+          </table>
+        </div>
         <div class="button-menu">
           <button><a href="https://www.hyster.com/en-us/north-america/" target="_blank">Button 1</a></button>
           <button><a href="#">Button 2</a></button>
@@ -46,8 +38,7 @@
           <button><a href="#">Button 7</a></button>
         </div>
       </div>
-      <div class="hamburger-menu"></div>
     </div>
-    <script src="{{url_for('static', filename='set_image_size.js') }}"></script>
+    <script src="{{ url_for('static', filename='landing_page_script.js') }}"></script>
   </body>
 </html>

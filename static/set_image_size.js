@@ -24,3 +24,6 @@ function onImageLoad() {
     imageContainer.style.width = containerWidth + 'px';
     imageContainer.style.height = containerHeight + 'px';
 };
+
+
+// link this with     <script src="{{url_for('static', filename='set_image_size.js') }}"></script>
