@@ -3,94 +3,12 @@ import pandas
 import os
 from datetime import datetime
 
-def script_path(script_name):
-    """gets the path to a sql script
+def script_path(script_name, folder=None):
+    if folder is None:
+        return os.path.join(os.path.dirname(__file__), 'sql', script_name)
+    else:
+        return os.path.join(os.path.dirname(__file__), 'sql', folder, script_name)
 
-    Args:
-        script_name (_type_): _description_
-
-    Returns:
-        _type_: _description_
-    """
-    return os.path.join(os.path.dirname(__file__), 'sql', script_name)
-
-class Database:
-    def __init__(self, db_path):
-        self.db_path = db_path
-        self.conn = None
-        
-    @property
-    def tables(self):
-        query = "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name;"
-        cursor = self.conn.cursor()
-        cursor.execute(query)
-        table_names = [table[0] for table in cursor.fetchall()]
-        return table_names
-
-    @property
-    def views(self):
-        query = "SELECT name FROM sqlite_master WHERE type='view' ORDER BY name;"
-        cursor = self.conn.cursor()
-        cursor.execute(query)
-        view_names = [view[0] for view in cursor.fetchall()]
-        return view_names
-    
-    def get_table_headers(self, table_name):
-        if table_name not in self.tables:
-            raise ValueError(f"{table_name} is not a valid table name.")
-        cursor = self.conn.cursor()
-        cursor.execute(f"SELECT * FROM {table_name} LIMIT 0")
-        return [description[0] for description in cursor.description]
-    
-    def insert_row(self, table_name, row_data: dict):
-        headers = self.get_table_headers(table_name)
-        if not all([k in headers for k in row_data.keys()]):
-            raise ValueError(f"{row_data.keys()} is not a valid column name for {table_name}.")
-        headers_in = row_data.keys()
-        columns = ', '.join(headers_in)
-        values = ', '.join([f"'{row_data[header]}'" for header in headers_in])
-        query = f"INSERT INTO {table_name} ({columns}) VALUES ({values})"
-        self.conn.execute(query)
-        self.conn.commit()
-        
-    def verify_connection(self):
-        if not self.conn:
-            raise sqlite3.Error("No active connection found")
-    
-    def __enter__(self):
-        self.conn = sqlite3.connect(self.db_path)
-        return self
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        if self.conn:
-            self.conn.commit()
-            self.conn.close()
-    
-    def run_sql(self, sql_file) -> sqlite3.Cursor:
-        self.verify_connection()
-        
-        with open(sql_file) as f:
-            sql = f.read()
-        return self.conn.executescript(sql)
-    
-    def insert_df(self, table_name, df):
-        with self.conn:
-            df.to_sql(table_name, self.conn, if_exists='append', index=False)
-
-    def get_table_data(self, table_name):
-        self.verify_connection()
-        # Verify that the table exists
-        cursor = self.conn.cursor()
-        cursor.execute(f"SELECT name FROM sqlite_master WHERE type='table' AND name='{table_name}'")
-        result = cursor.fetchone()
-        if result is None:
-            raise ValueError(f"Table '{table_name}' does not exist in the database")
-
-        # Get the table data as a pandas DataFrame
-        query = f"SELECT * FROM {table_name}"
-        df = pandas.read_sql_query(query, self.conn)
-
-        return df
 
 class SqlConnectionBase:
     
@@ -101,9 +19,6 @@ class SqlConnectionBase:
             raise ValueError(f"{self.db_path} is not a valid path")
         self.conn = None
         self.cursor = None
-    
-    @property
-    def valid_filename(self) -> bool:
         return os.path.isfile(self.db_path)
         
     # dunder methods for using context manager to connect to the database
@@ -147,6 +62,13 @@ class SqlConnectionBase:
         with open(sql_file) as f:
             sql = f.read()
         self.run_cmd(sql)
+    
+    # method for running sql scripts with multiple commands
+    def run_sql_script_multi(self, sql_file: str):
+        with open(sql_file) as f:
+            sql = f.read()
+        for cmd in sql.split(';'):
+            self.run_cmd(cmd)
         
     # getter method to get the description of a table or view
     def get_description(self, table_name: str) -> pandas.DataFrame:
@@ -159,14 +81,48 @@ class AppData(SqlConnectionBase):
     # when initialized, it will connect to the database, get values from it
     def __init__(self, db_path):
         super().__init__(db_path)
-        if not self.valid_filename:
+        if not os.path.isfile(self.db_path):
             self.build_database()
-        self.tables: pandas.DataFrame = self.get_tables()
-        self.views: pandas.DataFrame = self.get_views()
     
     def build_database(self):
         # create the database
-        self.run_sql_script(script_path("create_tickets_table.sql"))
+        tables = [
+            'roles',
+            'users',
+            'ticket_types', 
+            'ticket_status',
+            'equipment_status',
+            'due_date_reasons',
+            'vendors', 
+            'vendor_contacts',
+            'departments',
+            'internal_contacts',
+            'tickets',
+            'ticket_comments',
+            'ticket_attachments',
+            'ticket_history',
+            'equipment',
+            'equipment_history'
+        ]
+        triggers = [
+            'equipment_history_insert',
+            'equipment_history_update_status',
+            'equipment_history_update_pc_owner',
+            'equipment_history_update_external_owner',
+            'equipment_history_update_location',
+            'tickets_history_insert',
+            'tickets_history_update_type_id',
+            'tickets_history_update_due_date',
+            'tickets_history_update_due_date_reason_id',
+            'tickets_history_update_status_id',
+            'tickets_history_update_owner_id'
+        ]
+        for table in tables:
+            print(f'Creating table {table}...')
+            self.run_sql_script(script_path(f'{table}.sql', 'table_ddls'))
+        for trigger in triggers:
+            print(f'Creating trigger {trigger}...')
+            self.run_sql_script(script_path(f'{trigger}.sql', 'trigger_ddls'))
 
 class DbTableBase(SqlConnectionBase):
     """Base class for all database tables

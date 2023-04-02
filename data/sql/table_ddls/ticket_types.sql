@@ -1,0 +1,5 @@
+CREATE TABLE IF NOT EXISTS ticket_types (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    type TEXT NOT NULL,
+    description TEXT NOT NULL
+);

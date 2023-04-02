@@ -1,0 +1,4 @@
+CREATE TABLE IF NOT EXISTS due_date_reasons (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    reason TEXT NOT NULL
+);

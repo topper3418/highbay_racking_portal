@@ -1,0 +1,5 @@
+CREATE TABLE IF NOT EXISTS equipment_status (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    status TEXT NOT NULL,
+    description TEXT NOT NULL
+);

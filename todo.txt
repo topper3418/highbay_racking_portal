@@ -14,6 +14,8 @@ That table is getting data via an API, which is getting data from a sqlite table
 
 Next steps: 
 Build out SQLITE database
+    build another endpoint, devmode. just little by little based on 
+    what you need to do over and over again
 Build other tables from notes
 Build foreign keys and whatnot into it
 Build dev tools into the UI

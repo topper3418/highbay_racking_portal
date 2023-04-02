@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dev screen</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
+    <script src="{{url_for('static', filename='util.js')}}"></script>
+</head>
+<body>
+    <input type="text" id="queryInput" placeholder="Enter your query">
+    <button id="goButton">Go</button>
+    <table id="dataTable">
+        <thead>
+            <!-- Table header will be populated dynamically -->
+        </thead>
+        <tbody>
+            <!-- Table data will be populated here -->
+        </tbody>
+    </table>
+
+    <script>
+        document.getElementById("goButton").addEventListener("click", async function() {
+            const query = document.getElementById("queryInput").value;
+            const apiUrl = "/get_table";
+
+            try {
+                const response = await fetch(`${apiUrl}?query=${encodeURIComponent(query)}`);
+                if (response.ok) {
+                    const jsonData = await response.json();
+                    populateTableFromApi("dataTable", apiUrl, query);;
+                } else {
+                    console.error("Error fetching data from API:", response.statusText);
+                }
+            } catch (error) {
+                console.error("Error fetching data from API:", error);
+            }
+        });
+    </script>
+</body>
+</html>
