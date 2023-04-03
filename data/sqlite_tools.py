@@ -93,10 +93,8 @@ class AppData(SqlConnectionBase):
             'ticket_status',
             'equipment_status',
             'due_date_reasons',
-            'vendors', 
-            'departments',
-            'vendor_contacts',
-            'internal_contacts',
+            'orgs', 
+            'contacts',
             'tickets',
             'ticket_comments',
             'ticket_attachments',
@@ -280,38 +278,40 @@ class DueDateReason(DbTableBase):
     def dropdown(self) -> pandas.DataFrame:
         return self.get_data(f"SELECT id, reason as text FROM {self.table_name}")
     
-class Vendors(DbTableBase):
+class Orgs(DbTableBase):
     """represents the vendors table in the database
     """
     def __init__(self, db_path):
-        super().__init__(db_path, 'vendors')
+        super().__init__(db_path, 'orgs')
         
-    def insert(self, new_vendor_name, new_vendor_address, new_vendor_phone, new_vendor_email):
+    def insert(self, new_vendor_name, new_vendor_description, internal: bool):
         """inserts a new vendor into the vendors table"""
         params = {
             'name': new_vendor_name,
-            'address': new_vendor_address,
-            'phone': new_vendor_phone,
-            'email': new_vendor_email
+            'description': new_vendor_description,
+            'internal': int(internal)
         }
         super().default_insert(params)
         
-    def dropdown(self) -> pandas.DataFrame:
-        return self.get_data(f"SELECT id, vendor as text FROM {self.table_name}")
+    def dropdown(self, internal: bool) -> pandas.DataFrame:
+        return self.get_data(f"SELECT id, name as text FROM {self.table_name} WHERE internal = {int(internal)}")
 
-class Departments(DbTableBase):
-    """represents the departments table in the database
+class Contacts(DbTableBase):
+    """represents the contacts table in the database
     """
     def __init__(self, db_path):
-        super().__init__(db_path, 'departments')
+        super().__init__(db_path, 'contacts')
         
-    def insert(self, new_department_name, new_department_description):
-        """inserts a new department into the departments table"""
+    def insert(self, new_contact_name, new_contact_phone, new_contact_email, new_contact_department):
+        """inserts a new contact into the contacts table"""
         params = {
-            'name': new_department_name,
-            'description': new_department_description
+            'name': new_contact_name,
+            'phone': new_contact_phone,
+            'email': new_contact_email,
+            'org_id': new_contact_department,
         }
         super().default_insert(params)
         
     def dropdown(self) -> pandas.DataFrame:
-        return self.get_data(f"SELECT id, department as text FROM {self.table_name}")
+        sql = f"SELECT id, c.name || ' - ' || o.name as text FROM contacts c JOIN orgs o ON c.org_id = o.id"
+        return self.get_data(sql)

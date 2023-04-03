@@ -1,7 +1,7 @@
 import configparser
 import os
 from config.logging import logger
-from data.sqlite_tools import AppData, Tickets, DbTableBase, Roles, Users, TicketTypes, TicketStatus, EquipmentStatus, DueDateReason, Vendors, Departments
+from data.sqlite_tools import AppData, Tickets, DbTableBase, Roles, Users, TicketTypes, TicketStatus, EquipmentStatus, DueDateReason, Orgs, Orgs, Contacts
 from flask import Flask, render_template, request, jsonify, send_from_directory, redirect, url_for
 
 # Load configuration from file
@@ -155,8 +155,8 @@ def create_ticket_status():
     # log the ip address of the request
     logger.info(f'serving /create_ticket_status request from {request.remote_addr}')
     # parse request data
-    new_ticket_status = request.form['ticket_status_name']
-    new_description = request.form['ticket_status_description']
+    new_ticket_status = request.form['name']
+    new_description = request.form['description']
     # initialize the Roles object
     ticket_status = TicketStatus(app_data_path)
     ticket_status.insert(new_ticket_status, new_description)
@@ -175,8 +175,8 @@ def create_equipment_status():
     # log the ip address of the request
     logger.info(f'serving /create_equipment_status request from {request.remote_addr}')
     # parse request data
-    new_equipment_status = request.form['equipment_status_name']
-    new_description = request.form['equipment_status_description']
+    new_equipment_status = request.form['name']
+    new_description = request.form['description']
     # initialize the Roles object
     equipment_status = EquipmentStatus(app_data_path)
     equipment_status.insert(new_equipment_status, new_description)
@@ -195,8 +195,8 @@ def create_due_date_reason():
     # log the ip address of the request
     logger.info(f'serving /create_due_date_reason request from {request.remote_addr}')
     # parse request data
-    new_due_date_reason = request.form['due_date_reasons_name']
-    new_description = request.form['due_date_reasons_description']
+    new_due_date_reason = request.form['name']
+    new_description = request.form['description']
     # initialize the Roles object
     due_date_reason = DueDateReason(app_data_path)
     due_date_reason.insert(new_due_date_reason, new_description)
@@ -207,24 +207,22 @@ def create_new_vendor_popup():
     """Return the new vendor popup html"""
     # log the ip address of the request
     logger.info(f'serving /create_new_vendor_popup request from {request.remote_addr}')
-    return render_template('create_new_vendor_popup.html')
+    return render_template('insert_to_lookup_table_popup.html', name='Vendor', table_name='vendors')
 
-@app.route('/create_new_vendor', methods=['POST'])
-def create_new_vendor():
+@app.route('/create_vendors', methods=['POST'])
+def create_vendors():
     """Create a new vendor in the database"""
     # log the ip address of the request
     logger.info(f'serving /create_new_vendor request from {request.remote_addr}')
     # parse request data
     new_vendor_name = request.form['name']
-    new_vendor_address = request.form['address']
-    new_vendor_phone = request.form['phone']
-    new_vendor_email = request.form['email']
+    new_vendor_description = request.form['description']
     # initialize the Roles object
-    vendors = Vendors(app_data_path)
-    vendors.insert(new_vendor_name, new_vendor_address, new_vendor_phone, new_vendor_email)
+    orgs = Orgs(app_data_path)
+    orgs.insert(new_vendor_name, new_vendor_description, internal=False)
     return redirect(url_for('serve_main'))
 
-@app.route('/create_new_deppartment_popup', methods=['GET'])
+@app.route('/create_new_department_popup', methods=['GET'])
 def create_new_department_popup():
     """Return the new department popup html"""
     # log the ip address of the request
@@ -237,11 +235,11 @@ def create_new_department():
     # log the ip address of the request
     logger.info(f'serving /create_new_department request from {request.remote_addr}')
     # parse request data
-    new_department_name = request.form['departments_name']
-    new_department_description = request.form['departments_description']
+    new_department_name = request.form['name']
+    new_department_description = request.form['description']
     # initialize the Roles object
-    departments = Departments(app_data_path)
-    departments.insert(new_department_name, new_department_description)
+    orgs = Orgs(app_data_path)
+    orgs.insert(new_department_name, new_department_description, internal=True)
     return redirect(url_for('serve_main'))
 
 @app.route('/get_all_vendors', methods=['GET'])
@@ -250,9 +248,9 @@ def get_all_vendors():
     # log the ip address of the request
     logger.info(f'serving /get_all_vendors request from {request.remote_addr}')
     # initialize the Vendors object
-    vendors = Vendors(app_data_path)
+    orgs = Orgs(app_data_path)
     # get all vendors
-    all_vendors = vendors.dropdown()
+    all_vendors = orgs.dropdown(internal=False)
     return jsonify(all_vendors.to_dict(orient='records'))
 
 @app.route('/get_all_departments', methods=['GET'])
@@ -261,9 +259,9 @@ def get_all_departments():
     # log the ip address of the request
     logger.info(f'serving /get_all_departments request from {request.remote_addr}')
     # initialize the Departments object
-    departments = Departments(app_data_path)
+    orgs = Orgs(app_data_path)
     # get all departments
-    all_departments = departments.dropdown()
+    all_departments = orgs.dropdown(internal=True)
     return jsonify(all_departments.to_dict(orient='records'))
 
 @app.route('/create_new_contact_popup', methods=['GET'])
@@ -274,7 +272,23 @@ def create_new_contact_popup():
     return render_template('create_new_contact_popup.html')
 
 @app.route('/create_new_contact', methods=['POST'])
-
+def create_new_contact():
+    """Create a new contact in the database"""
+    # log the ip address of the request
+    logger.info(f'serving /create_new_contact request from {request.remote_addr}')
+    # parse request data
+    new_contact_name = request.form['name']
+    new_contact_phone = request.form['phone']
+    new_contact_email = request.form['email']
+    source = request.form['source']
+    vendor_id = request.form['vendor']
+    department_id = request.form['department']
+    # if the source is a vendor, set the org_id to the vendor id
+    new_contact_org_id = vendor_id if source == 'vendor' else department_id
+    # initialize the Contacts object
+    contacts = Contacts(app_data_path)
+    contacts.insert(new_contact_name, new_contact_phone, new_contact_email, new_contact_org_id)
+    return redirect(url_for('serve_main'))
 
 # test endpoint for sending misc html
 @app.route('/test', methods=['GET'])

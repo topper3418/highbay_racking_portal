@@ -107,21 +107,29 @@ function fetchPopup(event, callbacks) {
         });
 }
 
-function showHideDropdowns(event) {
+function showHideDropDowns(event) {
     const selectedValue = event.target.value;
     const dropdownToShow = document.getElementById(selectedValue);
+    const labelToShow = document.querySelector(`label[for="${selectedValue}"]`);
     
     let dropdownValues = [];
     const options = event.target.options;
-
     for (let i = 0; i < options.length; i++) {
         dropdownValues.push(options[i].value);
     }
-
+    console.log('dropdownValues', dropdownValues)
     dropdownValues.forEach(value => {
         const dropdown = document.getElementById(value);
-        dropdown.style.display = 'none';
+        const label = document.querySelector(`label[for="${value}"]`);
+        // only bother doing stuff to the styiling if the dropdown and label exist
+        if (dropdown) {
+            dropdown.style.display = 'none';
+        }
+        if (label) {
+            label.style.display = 'none';
+        }
     });
 
     dropdownToShow.style.display = 'block';
+    labelToShow.style.display = 'block';
 }

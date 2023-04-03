@@ -1,0 +1,15 @@
+possibly genius idea???
+
+
+create a class to represent a generic column in a database. 
+make a subclass for each type of column (theres only like four I think)
+give each column something like a default value for each default value, 
+give it the ability to generate the ddl line
+also give it the ability to generate a default read line
+Make it so when added to a custom "table" class, when the table says 
+    "ddl", it organizes the rows properly
+you can add foreign keys after the fact, and the tables will arrange 
+    themselves according to dependency using the __gt__ dunder methods
+you can then feed these table objects into some overlord database object 
+    and it executes the master ddl
+you can point the tables to csv files to add sample data  

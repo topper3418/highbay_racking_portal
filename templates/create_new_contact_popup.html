@@ -3,6 +3,7 @@
 <head>
 	<title>Create New Contact</title>
 	<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
+	<script src="{{ url_for('static', filename='util.js')}}"></script>
 </head>
 <body>
 	<h1>Create New Contact</h1>
@@ -17,18 +18,19 @@
 		<input type="text" id="email" name="email"><br>
 
 		<label for="source">Source:</label>
-		<select id="source" name="source" onchange="showHideDropdowns">
+		<select id="source" name="source" onchange="showHideDropDowns(event)">
+			<option value="None">Choose One</option>
 			<option value="vendor">Vendor</option>
 			<option value="department">Internal</option>
 		</select><br>
 
-		<label for="vendor">Vendor:</label>
-		<select id="vendor" name="vendor" data-link="{{ url_for('get_all_vendors') }}">
+		<label for="vendor" style='display:none'>Vendor:</label>
+		<select id="vendor" name="vendor" data-link="{{ url_for('get_all_vendors') }}" style='display:none'>
 			<option value="None">None</option>
 		</select><br>
 
-        <label for="department">Department:</label>
-        <select id="department" name="department" data-link="{{ url_for('get_all_departments') }}">
+        <label for="department" style='display:none'>Department:</label>
+        <select id="department" name="department" data-link="{{ url_for('get_all_departments') }}" style='display:none'>
             <option value="None">None</option>
         </select><br>
 
