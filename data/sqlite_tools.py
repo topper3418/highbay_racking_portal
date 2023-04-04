@@ -1,7 +1,11 @@
+from __future__ import annotations
 import sqlite3
 import pandas
 import os
 from datetime import datetime
+from dataclasses import dataclass, field
+
+from typing import Any, Optional, List
 
 def script_path(script_name, folder=None):
     if folder is None:
@@ -315,3 +319,172 @@ class Contacts(DbTableBase):
     def dropdown(self) -> pandas.DataFrame:
         sql = f"SELECT id, c.name || ' - ' || o.name as text FROM contacts c JOIN orgs o ON c.org_id = o.id"
         return self.get_data(sql)
+    
+
+
+
+
+# I am now going to experiment with an object oriented way to interface with sqlite. 
+# the idea is to make a dataclass for each type of variable, and then make objects I can 
+# assemble into a table. The tables then get fed into a database object that can build
+# the database and tables. During runtime the same object can be used to interact with
+# the database. This should make changine the database more intuitive 
+
+@dataclass
+class SQLiteColumn:
+    name: str
+    data_type: str
+    is_primary_key: bool = False
+    is_autoincrement: bool = False
+    is_not_null: bool = False
+    default_value: Optional[Any] = None
+    is_unique: bool = False
+    check_constraint: Optional[str] = None
+    foreign_key: Optional[ForeignKey] = field(default=None, repr=False, compare=False)
+    table: Optional['SQLiteTable'] = field(default=None, repr=False, compare=False)
+
+    def __str__(self) -> str:
+        return f"{self.name} ({self.data_type})"
+
+    def render_read_sql(self) -> str:
+        if self.data_type.upper() == "INTEGER" and "unixtime" in self.name.lower():
+            return f"strftime('%Y-%m-%d %H:%M:%S', {self.name}, 'unixepoch') AS {self.name}"
+        return self.name
+
+    def get_python_type(self) -> type:
+        data_type_mapping = {
+            "INTEGER": int,
+            "REAL": float,
+            "TEXT": str,
+            "BLOB": bytes
+        }
+        return data_type_mapping.get(self.data_type.upper(), None)
+
+@dataclass
+class ForeignKey:
+    target_column: SQLiteColumn
+    on_delete: Optional[str] = None
+    on_update: Optional[str] = None
+
+class SQLiteTable:
+    def __init__(self, name: str, 
+                       columns: List[SQLiteColumn], 
+                       primary_key: Optional[str] = None):
+        self.name = name
+        self.columns = columns
+        self.primary_key = primary_key
+        self.foreign_keys = self._gather_foreign_keys()
+
+    def __str__(self) -> str:
+        return f"Table: {self.name} ({', '.join(str(col) for col in self.columns)})"
+
+    def _gather_foreign_keys(self) -> List[str]:
+        foreign_keys = []
+        for column in self.columns:
+            if column.foreign_key is not None:
+                foreign_keys.append(str(column.foreign_key))
+        return foreign_keys
+
+    def render_ddl(self) -> str:
+        column_definitions = []
+
+        for column in self.columns:
+            column_parts = [column.name, column.data_type]
+
+            if column.is_primary_key:
+                column_parts.append("PRIMARY KEY")
+                if column.is_autoincrement:
+                    column_parts.append("AUTOINCREMENT")
+
+            if column.is_not_null:
+                column_parts.append("NOT NULL")
+
+            if column.default_value is not None:
+                default_value_str = f"DEFAULT {column.default_value}"
+                if isinstance(column.default_value, str):
+                    default_value_str = f"DEFAULT '{column.default_value}'"
+                column_parts.append(default_value_str)
+
+            if column.is_unique:
+                column_parts.append("UNIQUE")
+
+            if column.check_constraint is not None:
+                column_parts.append(f"CHECK({column.check_constraint})")
+
+            column_definitions.append(" ".join(column_parts))
+
+        if self.primary_key is not None:
+            primary_key_constraint = f"PRIMARY KEY({self.primary_key})"
+            column_definitions.append(primary_key_constraint)
+
+        # Add foreign key constraints
+        for fk in self.foreign_keys:
+            constraint_parts = [f"FOREIGN KEY({fk.source_column}) REFERENCES {fk.target_column.table.name}({fk.target_column.name})"]
+
+            if fk.on_delete is not None:
+                constraint_parts.append(f"ON DELETE {fk.on_delete}")
+
+            if fk.on_update is not None:
+                constraint_parts.append(f"ON UPDATE {fk.on_update}")
+
+            column_definitions.append(" ".join(constraint_parts))
+
+        columns_ddl = ", ".join(column_definitions)
+        return f"CREATE TABLE {self.name} ({columns_ddl});"
+
+@dataclass
+class PrimaryKeyColumn(SQLiteColumn):
+    def __init__(self):
+        super().__init__(
+            name="id",
+            data_type="INTEGER",
+            is_primary_key=True,
+            is_autoincrement=True,
+            is_not_null=True,
+        )   
+
+@dataclass
+class DateColumn(SQLiteColumn):
+    def __init__(self, name: str, 
+                       is_not_null: bool = False, 
+                       default_value: Optional[Any] = None, 
+                       check_constraint: Optional[str] = None):
+        super().__init__(
+            name=name,
+            data_type="INTEGER",
+            is_not_null=is_not_null,
+            default_value=default_value,
+            check_constraint=check_constraint,
+        )
+
+    def render_read_sql(self) -> str:
+        return f"strftime('%Y-%m-%d %H:%M:%S', {self.name}, 'unixepoch') AS {self.name}"
+
+    def get_python_type(self) -> type:
+        return datetime.datetime
+    
+@dataclass
+class NameColumn(SQLiteColumn):
+    def __init__(self, name: str, 
+                       check_constraint: Optional[str] = None):
+        super().__init__(
+            name=name,
+            data_type="TEXT",
+            is_autoincrement=False,
+            is_not_null=True,
+            is_unique=True,
+            check_constraint=check_constraint,
+        )
+
+    def get_python_type(self) -> type:
+        return str
+        
+if __name__ == '__main__':
+    table = SQLiteTable('dope_ass_table', 
+                        [PrimaryKeyColumn(),
+                         NameColumn('name'),
+                         DateColumn('created_time'),
+                         SQLiteColumn('random_value', 'TEXT')],
+                        primary_key='id')
+    print(table.render_ddl())
+    
