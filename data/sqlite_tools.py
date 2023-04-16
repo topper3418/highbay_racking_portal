@@ -1,11 +1,13 @@
 from __future__ import annotations
-import sqlite3
+from ast import Dict
 import pandas
+import sqlite3
 import os
 from datetime import datetime
 from dataclasses import dataclass, field
 
 from typing import Any, Optional, List
+
 
 def script_path(script_name, folder=None):
     if folder is None:
@@ -15,7 +17,7 @@ def script_path(script_name, folder=None):
 
 
 class SqlConnectionBase:
-    
+
     def __init__(self, db_path):
         self.db_path = db_path
         # raise exception if the directory does not exist
@@ -24,80 +26,82 @@ class SqlConnectionBase:
         self.conn = None
         self.cursor = None
         return os.path.isfile(self.db_path)
-        
+
     # dunder methods for using context manager to connect to the database
     def __enter__(self):
         self.conn = sqlite3.connect(self.db_path)
         self.cursor = self.conn.cursor()
         return self
-    
+
     def __exit__(self, exc_type, exc_value, traceback):
         if self.conn:
             self.conn.commit()
             self.conn.close()
-            
+
     # general method for writing to the database
     def run_cmd(self, sql_query: str):
         with self as db:
             db.cursor.execute(sql_query)
-            
+
     # run a command with params
     def run_cmd_params(self, sql_query: str, params: dict):
         with self as db:
             db.cursor.execute(sql_query, params)
-            
+
     # general method for reading from the database
     def get_data(self, sql_query: str):
         with self as db:
             return pandas.read_sql_query(sql_query, db.conn)
-    
+
     # getter method to get the tables in the database
     def get_tables(self) -> pandas.DataFrame:
         sql = "SELECT * FROM sqlite_master WHERE type='table' ORDER BY name;"
         return self.get_data(sql)
-        
+
     # getter method to get the views in the database
     def get_views(self) -> pandas.DataFrame:
         sql = "SELECT * FROM sqlite_master WHERE type='view' ORDER BY name;"
         return self.get_data(sql)
-    
+
     # method for running sql scripts
     def run_sql_script(self, sql_file: str):
         with open(sql_file) as f:
             sql = f.read()
         self.run_cmd(sql)
-    
+
     # method for running sql scripts with multiple commands
     def run_sql_script_multi(self, sql_file: str):
         with open(sql_file) as f:
             sql = f.read()
         for cmd in sql.split(';'):
             self.run_cmd(cmd)
-        
+
     # getter method to get the description of a table or view
     def get_description(self, table_name: str) -> pandas.DataFrame:
         sql = f"PRAGMA table_info({table_name})"
         return self.get_data(sql)
 
+
 class AppData(SqlConnectionBase):
     """Class for managing the sqlite connection to the app database
     """
     # when initialized, it will connect to the database, get values from it
+
     def __init__(self, db_path):
         super().__init__(db_path)
         if not os.path.isfile(self.db_path):
             self.build_database()
-    
+
     def build_database(self):
         # create the database
         tables = [
             'roles',
             'users',
-            'ticket_types', 
+            'ticket_types',
             'ticket_status',
             'equipment_status',
             'due_date_reasons',
-            'orgs', 
+            'orgs',
             'contacts',
             'tickets',
             'ticket_comments',
@@ -132,17 +136,19 @@ class AppData(SqlConnectionBase):
             print(f'Creating view {view}...')
             self.run_sql_script(script_path(f'{view}.sql', 'view_ddls'))
 
+
 class DbTableBase(SqlConnectionBase):
     """Base class for all database tables
     """
+
     def __init__(self, db_path, table_name: str):
         super().__init__(db_path)
         self.table_name = table_name
-        self.description = self.get_description()   
-    
+        self.description = self.get_description()
+
     def get_description(self) -> pandas.DataFrame:
-        return super().get_description(self.table_name) 
-    
+        return super().get_description(self.table_name)
+
     def default_insert(self, params: dict) -> None:
         """inserts a row into the table with the given params
 
@@ -156,7 +162,7 @@ class DbTableBase(SqlConnectionBase):
                     ({', '.join([f':{header}' for header in headers])})"""
         print(f'Running SQL: {sql} with params: {params}')
         self.run_cmd_params(sql, params)
-    
+
     def fetch_100(self, sql=None) -> pandas.DataFrame:
         """returns the first 100 rows from the requests table where the endtime is less than the given endtime
 
@@ -168,8 +174,9 @@ class DbTableBase(SqlConnectionBase):
         """
         if sql is None:
             sql = f"SELECT * FROM {self.table_name} LIMIT 100"
-        
+
         return self.get_data(sql)
+
 
 class Tickets(DbTableBase):
     """represents the requests table in the database
@@ -178,38 +185,43 @@ class Tickets(DbTableBase):
     # this will be the only class that interacts with the requests table.
     # if other classes need to interact with the requests table, they will
     # do so through this class
+
     def __init__(self, db_path):
         super().__init__(db_path, 'tickets')
         self.view_name = 'all_tickets_view'
-        
+
     def fetch_100(self, endtime: datetime = datetime.now()) -> pandas.DataFrame:
         sql = f"""SELECT * FROM {self.view_name}
                   WHERE submitted < {endtime.timestamp()}
                   LIMIT 100"""
         return super().fetch_100(sql)
-    
+
+
 class Roles(DbTableBase):
     """represents the roles table in the database
     """
+
     def __init__(self, db_path):
         super().__init__(db_path, 'roles')
-        
+
     def insert(self, new_role: str, new_description) -> None:
         params = {
             'role': new_role,
             'description': new_description
         }
         super().default_insert(params)
-    
+
     def dropdown(self) -> pandas.DataFrame:
         return self.get_data(f"SELECT id, role as text FROM {self.table_name}")
-    
+
+
 class Users(DbTableBase):
     """represents the users table in the database
     """
+
     def __init__(self, db_path):
         super().__init__(db_path, 'users')
-    
+
     def insert(self, new_username: str, new_password: str, new_role: int) -> None:
         params = {
             'username': new_username,
@@ -217,77 +229,87 @@ class Users(DbTableBase):
             'role': new_role
         }
         super().default_insert(params)
-        
+
+
 class TicketTypes(DbTableBase):
     """represents the ticket_types table in the database
     """
+
     def __init__(self, db_path):
         super().__init__(db_path, 'ticket_types')
-    
+
     def insert(self, new_type: str, new_description) -> None:
         params = {
             'type': new_type,
             'description': new_description
         }
         super().default_insert(params)
-        
+
     def dropdown(self) -> pandas.DataFrame:
         return self.get_data(f"SELECT id, type as text FROM {self.table_name}")
-    
+
+
 class TicketStatus(DbTableBase):
     """represents the ticket_status table in the database
     """
+
     def __init__(self, db_path):
         super().__init__(db_path, 'ticket_status')
-    
+
     def insert(self, new_status: str, new_description) -> None:
         params = {
             'status': new_status,
             'description': new_description
         }
         super().default_insert(params)
-        
+
     def dropdown(self) -> pandas.DataFrame:
         return self.get_data(f"SELECT id, status as text FROM {self.table_name}")
-    
+
+
 class EquipmentStatus(DbTableBase):
     """represents the equipment_status table in the database
     """
+
     def __init__(self, db_path):
         super().__init__(db_path, 'equipment_status')
-    
+
     def insert(self, new_status: str, new_description) -> None:
         params = {
             'status': new_status,
             'description': new_description
         }
         super().default_insert(params)
-        
+
     def dropdown(self) -> pandas.DataFrame:
         return self.get_data(f"SELECT id, status as text FROM {self.table_name}")
-    
+
+
 class DueDateReason(DbTableBase):
     """represents the due_date_reason table in the database
     """
+
     def __init__(self, db_path):
         super().__init__(db_path, 'due_date_reasons')
-        
+
     def insert(self, new_reason: str, new_description) -> None:
         params = {
             'reason': new_reason,
             'description': new_description
         }
         super().default_insert(params)
-        
+
     def dropdown(self) -> pandas.DataFrame:
         return self.get_data(f"SELECT id, reason as text FROM {self.table_name}")
-    
+
+
 class Orgs(DbTableBase):
     """represents the vendors table in the database
     """
+
     def __init__(self, db_path):
         super().__init__(db_path, 'orgs')
-        
+
     def insert(self, new_vendor_name, new_vendor_description, internal: bool):
         """inserts a new vendor into the vendors table"""
         params = {
@@ -296,16 +318,18 @@ class Orgs(DbTableBase):
             'internal': int(internal)
         }
         super().default_insert(params)
-        
+
     def dropdown(self, internal: bool) -> pandas.DataFrame:
         return self.get_data(f"SELECT id, name as text FROM {self.table_name} WHERE internal = {int(internal)}")
+
 
 class Contacts(DbTableBase):
     """represents the contacts table in the database
     """
+
     def __init__(self, db_path):
         super().__init__(db_path, 'contacts')
-        
+
     def insert(self, new_contact_name, new_contact_phone, new_contact_email, new_contact_department):
         """inserts a new contact into the contacts table"""
         params = {
@@ -315,20 +339,17 @@ class Contacts(DbTableBase):
             'org_id': new_contact_department,
         }
         super().default_insert(params)
-        
+
     def dropdown(self) -> pandas.DataFrame:
         sql = f"SELECT id, c.name || ' - ' || o.name as text FROM contacts c JOIN orgs o ON c.org_id = o.id"
         return self.get_data(sql)
-    
 
 
-
-
-# I am now going to experiment with an object oriented way to interface with sqlite. 
-# the idea is to make a dataclass for each type of variable, and then make objects I can 
+# I am now going to experiment with an object oriented way to interface with sqlite.
+# the idea is to make a dataclass for each type of variable, and then make objects I can
 # assemble into a table. The tables then get fed into a database object that can build
 # the database and tables. During runtime the same object can be used to interact with
-# the database. This should make changine the database more intuitive 
+# the database. This should make changine the database more intuitive
 
 @dataclass
 class SQLiteColumn:
@@ -340,15 +361,17 @@ class SQLiteColumn:
     default_value: Optional[Any] = None
     is_unique: bool = False
     check_constraint: Optional[str] = None
-    foreign_key: Optional[ForeignKey] = field(default=None, repr=False, compare=False)
-    table: Optional['SQLiteTable'] = field(default=None, repr=False, compare=False)
+    foreign_key: Optional[ForeignKey] = field(
+        default=None, repr=False, compare=False)
+    table: Optional['SQLiteTable'] = field(
+        default=None, repr=False, compare=False)
+    # this is not a sqlite clumn, but a convenience for the table object
+    is_name_column: bool = False
 
     def __str__(self) -> str:
         return f"{self.name} ({self.data_type})"
 
     def render_read_sql(self) -> str:
-        if self.data_type.upper() == "INTEGER" and "unixtime" in self.name.lower():
-            return f"strftime('%Y-%m-%d %H:%M:%S', {self.name}, 'unixepoch') AS {self.name}"
         return self.name
 
     def get_python_type(self) -> type:
@@ -360,30 +383,39 @@ class SQLiteColumn:
         }
         return data_type_mapping.get(self.data_type.upper(), None)
 
+
 @dataclass
 class ForeignKey:
-    target_column: SQLiteColumn
+    """I will only ever have foreign keys be referencing primary keys, therefore these can point at 
+    tables. """
+    referenced_table: SQLiteTable
     on_delete: Optional[str] = None
     on_update: Optional[str] = None
 
+
 class SQLiteTable:
-    def __init__(self, name: str, 
-                       columns: List[SQLiteColumn], 
-                       primary_key: Optional[str] = None):
+    def __init__(self, name: str,
+                 columns: List[SQLiteColumn]):
         self.name = name
         self.columns = columns
-        self.primary_key = primary_key
-        self.foreign_keys = self._gather_foreign_keys()
+        self.colnames = [col.name for col in self.columns]
+        self.primary_keys = [
+            col.name for col in self.columns if col.is_primary_key]
+        self.foreign_keys = [(col.name, col.foreign_key)
+                             for col in self.columns 
+                             if col.foreign_key is not None]
+        self.validate()
+
+    def validate(self) -> None:
+        """checks all inputs and raises errors if something is wrong"""
+        # first make sure there's only one name column
+        name_columns = [col.name for col in self.columns if col.is_name_column]
+        if len(name_columns) > 1:
+            raise ValueError(
+                f"Table {self.name} has more than one name column: {', '.join(name_columns)}")
 
     def __str__(self) -> str:
         return f"Table: {self.name} ({', '.join(str(col) for col in self.columns)})"
-
-    def _gather_foreign_keys(self) -> List[str]:
-        foreign_keys = []
-        for column in self.columns:
-            if column.foreign_key is not None:
-                foreign_keys.append(str(column.foreign_key))
-        return foreign_keys
 
     def render_ddl(self) -> str:
         column_definitions = []
@@ -413,24 +445,53 @@ class SQLiteTable:
 
             column_definitions.append(" ".join(column_parts))
 
-        if self.primary_key is not None:
-            primary_key_constraint = f"PRIMARY KEY({self.primary_key})"
-            column_definitions.append(primary_key_constraint)
+        # Add primary key constraints
+        for pk in self.primary_keys:
+            column_definitions.append(f"PRIMARY KEY({pk})")
 
         # Add foreign key constraints
-        for fk in self.foreign_keys:
-            constraint_parts = [f"FOREIGN KEY({fk.source_column}) REFERENCES {fk.target_column.table.name}({fk.target_column.name})"]
+        for colname, foreign_key in self.foreign_keys:
+            # again, all primary keys are id in this db
+            constraint_parts = [
+                f"FOREIGN KEY({colname}) REFERENCES {foreign_key.referenced_table.name}(id)"]
 
-            if fk.on_delete is not None:
-                constraint_parts.append(f"ON DELETE {fk.on_delete}")
+            if foreign_key.on_delete is not None:
+                constraint_parts.append(f"ON DELETE {foreign_key.on_delete}")
 
-            if fk.on_update is not None:
-                constraint_parts.append(f"ON UPDATE {fk.on_update}")
+            if foreign_key.on_update is not None:
+                constraint_parts.append(f"ON UPDATE {foreign_key.on_update}")
 
             column_definitions.append(" ".join(constraint_parts))
 
         columns_ddl = ", ".join(column_definitions)
         return f"CREATE TABLE {self.name} ({columns_ddl});"
+
+    def render_insert_sql(self, data: Dict[str, Any]) -> str:
+        """data is a dictionary of column names and values"""
+        columns = []
+        values = []
+        for column in self.columns:
+            if column.name in data:
+                columns.append(column.name)
+                value = data[column.name]
+                if isinstance(value, str):
+                    value = f"'{value}'"
+                values.append(str(value))
+
+        columns_ddl = ", ".join(columns)
+        values_ddl = ", ".join(values)
+        return f"INSERT INTO {self.name} ({columns_ddl}) VALUES ({values_ddl});"
+
+    def render_read_sql(self, col_list: Optional[List[str]]=None, max_rows=100) -> str:
+        if col_list is None:
+            col_list = self.colnames
+        columns_ddl = ", ".join(col.render_read_sql() for col in self.columns if col.name in col_list)
+        return f"SELECT {columns_ddl} FROM {self.name} LIMIT {max_rows};"
+
+    @property
+    def link(self) -> ForeignKey:
+        return ForeignKey(referenced_table=self)
+
 
 @dataclass
 class PrimaryKeyColumn(SQLiteColumn):
@@ -441,14 +502,15 @@ class PrimaryKeyColumn(SQLiteColumn):
             is_primary_key=True,
             is_autoincrement=True,
             is_not_null=True,
-        )   
+        )
+
 
 @dataclass
 class DateColumn(SQLiteColumn):
-    def __init__(self, name: str, 
-                       is_not_null: bool = False, 
-                       default_value: Optional[Any] = None, 
-                       check_constraint: Optional[str] = None):
+    def __init__(self, name: str,
+                 is_not_null: bool = False,
+                 default_value: Optional[Any] = None,
+                 check_constraint: Optional[str] = None):
         super().__init__(
             name=name,
             data_type="INTEGER",
@@ -462,29 +524,124 @@ class DateColumn(SQLiteColumn):
 
     def get_python_type(self) -> type:
         return datetime.datetime
-    
+
+
 @dataclass
-class NameColumn(SQLiteColumn):
-    def __init__(self, name: str, 
-                       check_constraint: Optional[str] = None):
+class TextColumn(SQLiteColumn):
+    def __init__(self, name: str,
+                 is_not_null: bool = False,
+                 is_unique: bool = False,
+                 check_constraint: Optional[str] = None):
         super().__init__(
             name=name,
             data_type="TEXT",
+            is_not_null=is_not_null,
+            is_unique=is_unique,
             is_autoincrement=False,
-            is_not_null=True,
-            is_unique=True,
             check_constraint=check_constraint,
         )
 
     def get_python_type(self) -> type:
         return str
+
+
+@dataclass
+class NameColumn(TextColumn):
+    def __init__(self, name: str):
+        super().__init__(
+            name=name,
+            is_not_null=True,
+            is_unique=True,
+            check_constraint="length(name) > 0"
+        )
+
+
+@dataclass
+class IntColumn(SQLiteColumn):
+    def __init__(self, name: str,
+                 is_not_null: bool = False,
+                 is_unique: bool = False,
+                 default_value: Optional[Any] = None,
+                 foreign_key: Optional[ForeignKey] = None,
+                 check_constraint: Optional[str] = None):
+        super().__init__(
+            name=name,
+            data_type="INTEGER",
+            is_not_null=is_not_null,
+            is_unique=is_unique,
+            foreign_key=foreign_key,
+            default_value=default_value,
+            check_constraint=check_constraint,
+        )
+
+
+@dataclass
+class BoolColumn(SQLiteColumn):
+    def __init__(self, name: str,
+                 is_not_null: bool = False,
+                 default_value: Optional[Any] = None,
+                 check_constraint: Optional[str] = None):
+        super().__init__(
+            name=name,
+            data_type="INTEGER",
+            is_not_null=is_not_null,
+            default_value=default_value,
+            check_constraint=check_constraint,
+        )
+
+    def get_python_type(self) -> type:
+        return bool
+
+
+class SQLiteDatabase:
+    def __init__(self, filename: str, tables: List[SQLiteTable]):
+        self.filename = filename
+        self.tables = tables
+        self.table_dict = {table.name: table for table in self.tables}
         
-if __name__ == '__main__':
-    table = SQLiteTable('dope_ass_table', 
-                        [PrimaryKeyColumn(),
-                         NameColumn('name'),
-                         DateColumn('created_time'),
-                         SQLiteColumn('random_value', 'TEXT')],
-                        primary_key='id')
-    print(table.render_ddl())
+    def __getitem__(self, table_name: str) -> SQLiteTable:
+        return self.table_dict[table_name]
+        
+    def build_db(self):
+        with sqlite3.connect(self.filename) as conn:
+            for table in self.tables:
+                conn.execute(table.render_ddl())
+        
+    def run_sql_query(self, sql_query):
+        with sqlite3.connect(self.filename) as conn:
+            return pandas.read_sql(sql_query, conn)
+        
+    def run_sql_command(self, sql_command):
+        with sqlite3.connect(self.filename) as conn:
+            conn.execute(sql_command)
     
+    def read_table(self, table_name, max_rows=100):
+        if not table_name in self.table_dict:
+            raise ValueError(f"Table {table_name} does not exist")
+        return self.run_sql_query(self[table_name].render_read_sql(max_rows=max_rows))
+    
+    def insert_into(self, table_name: str, values: Dict[str, Any]):
+        if not table_name in self.table_dict:
+            raise ValueError(f"Table {table_name} does not exist")
+        return self.run_sql_command(self[table_name].render_insert_sql(values)) 
+
+
+class LookupTable(SQLiteTable):
+    def __init__(self, name: str,
+                 columns: Optional[List[SQLiteColumn]] = None):
+        
+        self.name = name
+        self.columns = [PrimaryKeyColumn(),
+                        NameColumn(name[:-1]),
+                        TextColumn('description')]
+        if columns is not None:
+            self.columns.extend(columns)
+        self.colnames = [col.name for col in self.columns]
+        self.primary_keys = [col.name for col in self.columns if col.is_primary_key]
+        self.foreign_keys = [(col.name, col.foreign_key) 
+                             for col in self.columns 
+                             if col.foreign_key is not None]
+    
+
+if __name__ == '__main__':
+    pass
