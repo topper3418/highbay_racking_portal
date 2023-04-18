@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>{{ table_name }} Insert Form</title>
+  </head>
+  <body>
+    <h1>{{ table_name }} Insert Form</h1>
+    <form method="post" action="{{ url_for('insert_form', table_name=table_name) }}">
+      <label for="name">{{ name_column_name }}:</label>
+      <input type="text" id="name" name="name"><br><br>
+      <label for="description">Description:</label>
+      <textarea id="description" name="description" rows="4" cols="50"></textarea><br><br>
+      <input type="submit" value="Submit">
+    </form>
+  </body>
+</html>

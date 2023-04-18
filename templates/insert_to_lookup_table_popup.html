@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Create New {{ name }}</title>
+	<title>Create New {{ table_name }}</title>
 </head>
 <body>
-	<h1>Create New {{ name }}</h1>
-	<form method="post" action="/create_{{ table_name }}">
-		<label for="name">New {{ name }} Name:</label>
+	<h1>Create New {{ table_name }}</h1>
+	<form method="post" action="/{{ table_name }}_insert">
+		<label for="name">New {{ name_column_name }}:</label>
 		<input type="text" id="name" name="name"><br>
 
 		<label for="description">New Description:</label>
